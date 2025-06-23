@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  crp       String   @unique // Registro CRP
+  role      Role     @default(PSYCHOLOGIST)
+  isActive  Boolean  @default(true)
+  
+  // Dados profissionais
+  specialty String?
+  phone     String?
+  
+  // Auditoria
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relacionamentos
+  patients  Patient[]
+  sessions  Session[]
+  
+  @@map("users")
+}
+
+model Patient {
+  id          String   @id @default(cuid())
+  name        String
+  cpf         String   @unique
+  email       String?
+  phone       String?
+  dateOfBirth DateTime
+  address     String?
+  
+  // Dados clínicos obrigatórios CFP
+  initialDemand    String
+  objectives       String
+  referralSource   String?
+  
+  // Consentimentos LGPD
+  recordingConsent Boolean @default(false)
+  dataConsent      Boolean @default(true)
+  consentDate      DateTime @default(now())
+  
+  // Relacionamentos
+  psychologistId String
+  psychologist   User @relation(fields: [psychologistId], references: [id])
+  sessions       Session[]
+  documents      Document[]
+  
+  // Auditoria
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("patients")
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  scheduledAt    DateTime
+  duration       Int      @default(50) // minutos
+  status         SessionStatus @default(SCHEDULED)
+  
+  // Dados da sessão
+  evolutionNotes String?
+  techniques     String[]
+  observations   String?
+  
+  // Integração Fireflies
+  meetingUrl     String?
+  firefliesId    String?
+  transcriptId   String?
+  hasRecording   Boolean @default(false)
+  shouldRecord   Boolean @default(false)
+  
+  // Relacionamentos
+  patientId      String
+  patient        Patient @relation(fields: [patientId], references: [id])
+  psychologistId String
+  psychologist   User @relation(fields: [psychologistId], references: [id])
+  
+  // Auditoria
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("sessions")
+}
+
+model Document {
+  id          String @id @default(cuid())
+  title       String
+  type        DocumentType
+  content     String // Conteúdo criptografado
+  fileName    String?
+  fileUrl     String?
+  
+  // Relacionamentos
+  patientId   String
+  patient     Patient @relation(fields: [patientId], references: [id])
+  
+  // Auditoria
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("documents")
+}
+
+enum Role {
+  PSYCHOLOGIST
+  ADMIN
+}
+
+enum SessionStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum DocumentType {
+  PSYCHOLOGICAL_EVALUATION
+  EVOLUTION_REPORT
+  REFERRAL
+  CONSENT_FORM
+  OTHER
+}
