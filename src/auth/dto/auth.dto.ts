@@ -22,9 +22,12 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Email deve ter um formato válido' })
   email: string;
 
-  @ApiProperty({ example: 'senha123' })
+  @ApiProperty({ example: 'Senh@Forte1' })
   @IsString()
-  @MinLength(6, { message: 'Senha deve ter pelo menos 6 caracteres' })
+  @MinLength(8, { message: 'Senha deve ter pelo menos 8 caracteres' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, {
+    message: 'Senha deve conter pelo menos uma letra minúscula, uma maiúscula e um número',
+  })
   password: string;
 
   @ApiProperty({ example: 'CRP-01/12345' })

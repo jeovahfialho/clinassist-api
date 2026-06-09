@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { PatientsModule } from './patients/patients.module';
 import { SessionsModule } from './sessions/sessions.module';
@@ -13,12 +15,25 @@ import { EncryptionService } from './common/services/encryption.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 20,
+      },
+    ]),
     AuthModule,
     PatientsModule,
     SessionsModule,
     FirefliesModule,
     DocumentsModule,
   ],
-  providers: [PrismaService, EncryptionService],
+  providers: [
+    PrismaService,
+    EncryptionService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

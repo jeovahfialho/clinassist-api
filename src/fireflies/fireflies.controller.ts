@@ -126,10 +126,21 @@ export class FirefliesController {
   async handleWebhook(
     @Body() payload: FirefliesWebhookDto,
     @Headers('x-fireflies-signature') signature?: string,
+    @Request() req?,
   ) {
     const webhookSecret = this.configService.get<string>('FIREFLIES_WEBHOOK_SECRET');
-    if (webhookSecret && signature) {
-      // Implementar verificação de assinatura HMAC
+    if (webhookSecret) {
+      if (!signature) {
+        throw new BadRequestException('Missing webhook signature');
+      }
+      const { createHmac } = await import('crypto');
+      const rawBody = req?.rawBody || Buffer.from(JSON.stringify(payload));
+      const expectedSignature = createHmac('sha256', webhookSecret)
+        .update(rawBody)
+        .digest('hex');
+      if (signature !== expectedSignature) {
+        throw new BadRequestException('Invalid webhook signature');
+      }
     }
     return this.firefliesService.handleWebhook(payload);
   }

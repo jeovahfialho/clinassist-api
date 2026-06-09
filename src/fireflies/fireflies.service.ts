@@ -1593,8 +1593,6 @@ private generateDefaultTitle(session: any): string {
     const data = { query, variables };
 
     this.logger.log('📤 [FIREFLIES] Enviando request para:', this.apiUrl);
-    this.logger.log('📤 [FIREFLIES] Query:', query.trim());
-    this.logger.log('📤 [FIREFLIES] Variables:', JSON.stringify(variables, null, 2));
 
     const response = await fetch(this.apiUrl, {
       method: 'POST',
@@ -1611,7 +1609,7 @@ private generateDefaultTitle(session: any): string {
     }
 
     const responseData = await response.json();
-    this.logger.log('📥 [FIREFLIES] Response data:', JSON.stringify(responseData, null, 2));
+    this.logger.log('📥 [FIREFLIES] Response received successfully');
     
     if (responseData.errors) {
       this.logger.error('❌ [FIREFLIES] GraphQL Errors:', responseData.errors);
